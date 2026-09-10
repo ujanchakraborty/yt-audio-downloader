@@ -21,6 +21,8 @@ import (
 //go:embed ui/*
 var staticFiles embed.FS
 
+var version = "dev"
+
 type downloadReq struct {
 	URL string `json:"url"`
 	Dir string `json:"dir"`
@@ -65,15 +67,21 @@ func main() {
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		fatal("Server failed: " + err.Error())
+		fmt.Println("Failed to start server:", err)
+		fmt.Println("Press Enter to exit...")
+		fmt.Scanln()
+		os.Exit(1)
 	}
 
 	port := listener.Addr().(*net.TCPAddr).Port
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
 
 	fmt.Println()
-	fmt.Println("  YT Audio Downloader")
-	fmt.Println("  ───────────────────")
+	fmt.Println("  ╭─────────────────────────╮")
+	fmt.Println("  │   YT Audio Downloader   │")
+	fmt.Printf("  │   v%-20s│\n", version)
+	fmt.Println("  ╰─────────────────────────╯")
+	fmt.Println()
 	fmt.Printf("  Open: %s\n", url)
 	fmt.Println("  Close this window to stop.")
 	fmt.Println()
@@ -85,17 +93,19 @@ func main() {
 func apiInfo(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
-	json.NewEncoder(w).Encode(map[string]string{"dir": outputDir})
+	json.NewEncoder(w).Encode(map[string]string{
+		"dir":     outputDir,
+		"version": version,
+	})
 }
 
 func apiSetDir(w http.ResponseWriter, r *http.Request) {
 	var req dirReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Dir == "" {
-		http.Error(w, "bad request", 400)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	info, err := os.Stat(req.Dir)
-	if err != nil || !info.IsDir() {
+	if info, err := os.Stat(req.Dir); err != nil || !info.IsDir() {
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid directory"})
 		return
 	}
@@ -108,7 +118,7 @@ func apiSetDir(w http.ResponseWriter, r *http.Request) {
 func apiResolve(w http.ResponseWriter, r *http.Request) {
 	var req resolveReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Name == "" {
-		http.Error(w, "bad request", 400)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -143,7 +153,7 @@ func apiResolve(w http.ResponseWriter, r *http.Request) {
 func apiDownload(w http.ResponseWriter, r *http.Request) {
 	var req downloadReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.URL == "" {
-		http.Error(w, "bad request", 400)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -188,25 +198,24 @@ func doDownload(url, dir string) {
 		mu.Unlock()
 	}()
 
-	log("Starting download...", "accent")
+	addLog("Starting download...", "accent")
 
 	ytdl := findBin("yt-dlp")
 	if ytdl == "" {
-		log("yt-dlp not found. Install: pip install yt-dlp", "error")
+		addLog("yt-dlp not found. Install: pip install yt-dlp", "error")
 		return
 	}
-	log("yt-dlp: "+filepath.Base(ytdl), "dim")
+	addLog("yt-dlp: "+filepath.Base(ytdl), "dim")
 
-	ffmpeg := findBin("ffmpeg")
-	ffmpegArg := ""
-	if ffmpeg != "" {
-		ffmpegArg = filepath.Dir(ffmpeg)
-		log("ffmpeg: found", "dim")
+	ffmpegDir := findBin("ffmpeg")
+	if ffmpegDir != "" {
+		ffmpegDir = filepath.Dir(ffmpegDir)
+		addLog("ffmpeg: found", "dim")
 	} else {
-		log("ffmpeg not found - put next to .exe", "warning")
+		addLog("ffmpeg not found — audio conversion may fail", "warning")
 	}
 
-	log("Save: "+dir, "dim")
+	addLog("Save: "+dir, "dim")
 
 	out := filepath.Join(dir, "%(title)s.%(ext)s")
 	args := []string{
@@ -216,12 +225,12 @@ func doDownload(url, dir string) {
 		"--no-warnings", "--no-check-certificates",
 		"--newline", "--progress",
 	}
-	if ffmpegArg != "" {
-		args = append(args, "--ffmpeg-location", ffmpegArg)
+	if ffmpegDir != "" {
+		args = append(args, "--ffmpeg-location", ffmpegDir)
 	}
 	args = append(args, url)
 
-	log("Fetching video info...", "info")
+	addLog("Fetching video info...", "info")
 
 	cmd := exec.Command(ytdl, args...)
 	cmd.Dir = dir
@@ -241,7 +250,7 @@ func doDownload(url, dir string) {
 			if len(msg) > 500 {
 				msg = msg[:500]
 			}
-			log("Error: "+msg, "error")
+			addLog("Error: "+msg, "error")
 			return
 		}
 	}
@@ -256,14 +265,14 @@ func doDownload(url, dir string) {
 			if strings.Contains(line, "Destination:") {
 				idx := strings.Index(line, "Destination:")
 				downloadedFile = strings.TrimSpace(line[idx+12:])
-				log("Saving: "+filepath.Base(downloadedFile), "dim")
+				addLog("Saving: "+filepath.Base(downloadedFile), "dim")
 			} else if strings.Contains(line, "100%") {
-				log("Download complete!", "success")
+				addLog("Download complete!", "success")
 			} else if pct := extractPct(line); pct > 0 {
-				log(fmt.Sprintf("Progress: %.0f%%", pct), "dim")
+				addLog(fmt.Sprintf("Progress: %.0f%%", pct), "dim")
 			}
 		} else if strings.Contains(line, "[ExtractAudio]") {
-			log("Converting to MP3...", "warning")
+			addLog("Converting to MP3...", "warning")
 		}
 	}
 
@@ -272,11 +281,11 @@ func doDownload(url, dir string) {
 		mp3 := filepath.Join(dir, base+".mp3")
 		if fi, err := os.Stat(mp3); err == nil {
 			mb := float64(fi.Size()) / 1024 / 1024
-			log(fmt.Sprintf("Saved: %s (%.1f MB)", filepath.Base(mp3), mb), "success")
+			addLog(fmt.Sprintf("Saved: %s (%.1f MB)", filepath.Base(mp3), mb), "success")
 		}
 	}
 
-	log("Done!", "success")
+	addLog("Done!", "success")
 }
 
 func findBin(name string) string {
@@ -317,7 +326,7 @@ func extractPct(line string) float64 {
 	return v
 }
 
-func log(text, typ string) {
+func addLog(text, typ string) {
 	mu.Lock()
 	defer mu.Unlock()
 	logs = append(logs, logEntry{
@@ -337,11 +346,4 @@ func openBrowser(url string) {
 		cmd = exec.Command("xdg-open", url)
 	}
 	go cmd.Run()
-}
-
-func fatal(msg string) {
-	fmt.Println("Error:", msg)
-	fmt.Println("Press Enter to exit...")
-	fmt.Scanln()
-	os.Exit(1)
 }

@@ -4,76 +4,189 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YT Audio Downloader</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0f;--card:#13131a;--border:#252530;--text:#fafafa;--text2:#9ca3af;--muted:#6b7280;--accent:#f43f5e;--accent2:#fb7185;--green:#22c55e;--yellow:#fbbf24;--red:#ef4444;--r:12px}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(244,63,94,.08) 0%,transparent 60%)}
-.app{width:100%;max-width:600px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;box-shadow:0 25px 60px rgba(0,0,0,.5);position:relative;overflow:hidden}
-.app::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(244,63,94,.3),transparent)}
-h1{font-size:28px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#fff,#e2e8f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-.sub{color:var(--text2);font-size:13px;margin-bottom:28px}
-.lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
-.input-row{display:flex;gap:8px;margin-bottom:22px}
-.url-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 16px;color:var(--text);font-size:14px;outline:none;transition:all .2s;font-family:inherit}
-.url-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(244,63,94,.15)}
+:root{
+  --bg:#09090b;--card:#18181b;--border:#27272a;
+  --text:#fafafa;--text2:#a1a1aa;--muted:#71717a;
+  --accent:#f43f5e;--accent2:#fb7185;
+  --green:#22c55e;--yellow:#eab308;--red:#ef4444;
+  --r:14px;
+}
+body{
+  font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(244,63,94,.06) 0%,transparent 60%),
+    radial-gradient(circle at 80% 80%,rgba(99,102,241,.03) 0%,transparent 40%);
+}
+.app{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:24px;padding:40px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 25px 50px -12px rgba(0,0,0,.6);
+  position:relative;overflow:hidden;
+}
+.app::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(244,63,94,.25),transparent);
+}
+.header{margin-bottom:32px}
+h1{
+  font-size:30px;font-weight:800;letter-spacing:-.6px;
+  background:linear-gradient(135deg,#fff 0%,#a1a1aa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.sub{color:var(--text2);font-size:14px;line-height:1.5}
+.lbl{
+  font-size:11px;font-weight:600;letter-spacing:1px;
+  color:var(--muted);margin-bottom:10px;text-transform:uppercase;
+}
+.field{margin-bottom:24px}
+.input-row{display:flex;gap:8px}
+.url-input{
+  flex:1;background:var(--bg);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;color:var(--text);font-size:14px;
+  outline:none;transition:all .2s ease;font-family:inherit;
+}
+.url-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(244,63,94,.1);
+}
 .url-input::placeholder{color:var(--muted)}
-.btn{border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:8px}
-.btn-ghost{background:var(--bg);color:var(--text2);border:1px solid var(--border);padding:13px 18px}
+.btn{
+  border:none;border-radius:var(--r);font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .15s ease;font-family:inherit;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn:active{transform:scale(.97)}
+.btn-ghost{
+  background:var(--bg);color:var(--text2);
+  border:1px solid var(--border);padding:14px 20px;
+}
 .btn-ghost:hover{background:var(--border);color:var(--text)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#e11d48);color:#fff;font-size:16px;padding:15px 0;width:100%;border-radius:var(--r);font-weight:700;box-shadow:0 4px 20px rgba(244,63,94,.3);justify-content:center}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(244,63,94,.4)}
-.btn-primary:active{transform:translateY(0)}
-.btn-primary:disabled{background:var(--border);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none}
-.save-row{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:4px 4px 4px 16px;margin-bottom:24px}
-.save-path{flex:1;font-size:12px;color:var(--text2);font-family:'Consolas',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:32px}
-.btn-save{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
-.btn-save:hover{background:var(--accent2)}
-.status{display:flex;align-items:center;gap:10px;margin-bottom:16px;min-height:20px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s}
-.dot.active{background:var(--accent);box-shadow:0 0 8px var(--accent)}
-.dot.success{background:var(--green);box-shadow:0 0 8px var(--green)}
-.dot.error{background:var(--red);box-shadow:0 0 8px var(--red)}
-.dot.warning{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.save-row{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r);padding:4px 4px 4px 16px;
+}
+.save-path{
+  flex:1;font-size:12px;color:var(--text2);
+  font-family:'SF Mono','Cascadia Code','Consolas',monospace;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:32px;
+}
+.btn-save{
+  background:var(--accent);color:#fff;border:none;
+  padding:10px 20px;border-radius:10px;font-size:13px;
+  font-weight:600;cursor:pointer;transition:all .15s ease;
+  white-space:nowrap;
+}
+.btn-save:hover{background:var(--accent2);transform:scale(1.02)}
+.btn-save:active{transform:scale(.98)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),#e11d48);
+  color:#fff;font-size:16px;padding:16px 0;width:100%;
+  border-radius:var(--r);font-weight:700;
+  box-shadow:0 4px 24px rgba(244,63,94,.25);
+  justify-content:center;margin-top:4px;
+}
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 32px rgba(244,63,94,.35);
+}
+.btn-primary:active{transform:translateY(0) scale(.99)}
+.btn-primary:disabled{
+  background:var(--border);color:var(--muted);
+  box-shadow:none;cursor:not-allowed;transform:none;
+}
+.status{display:flex;align-items:center;gap:10px;margin-bottom:14px;min-height:22px}
+.indicator{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--muted);flex-shrink:0;
+  transition:all .3s ease;
+}
+.indicator.active{background:var(--accent);box-shadow:0 0 12px var(--accent);animation:glow 2s ease-in-out infinite}
+.indicator.success{background:var(--green);box-shadow:0 0 12px var(--green)}
+.indicator.error{background:var(--red);box-shadow:0 0 12px var(--red)}
+.indicator.warning{background:var(--yellow);box-shadow:0 0 12px var(--yellow)}
+@keyframes glow{0%,100%{opacity:1}50%{opacity:.6}}
 .status-text{font-size:13px;color:var(--text2)}
-.progress{height:4px;background:var(--bg);border-radius:2px;margin-bottom:24px;overflow:hidden}
-.progress-fill{height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s cubic-bezier(.22,1,.36,1)}
-.progress-fill.indeterminate{width:100%;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:ind 1.5s infinite}
-@keyframes ind{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-.logs{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:4px;max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.progress{height:4px;background:var(--bg);border-radius:2px;margin-bottom:28px;overflow:hidden}
+.progress-fill{
+  height:100%;width:0%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s cubic-bezier(.22,1,.36,1);
+}
+.progress-fill.indeterminate{
+  width:100%;
+  background:linear-gradient(90deg,transparent 0%,var(--accent) 50%,transparent 100%);
+  animation:slide 1.5s ease-in-out infinite;
+}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.logs{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r);padding:4px;
+  max-height:180px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
 .logs::-webkit-scrollbar{width:6px}
 .logs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.log{padding:6px 10px;font-size:11px;font-family:'Consolas',monospace;line-height:1.5;border-radius:6px;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-.log .t{color:var(--muted);margin-right:8px}
+.log{
+  padding:6px 12px;font-size:11px;
+  font-family:'SF Mono','Cascadia Code','Consolas',monospace;
+  line-height:1.6;border-radius:8px;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log .t{color:var(--muted);margin-right:8px;font-size:10px}
 .log.info{color:var(--text2)}
 .log.success{color:var(--green)}
 .log.error{color:var(--red)}
 .log.warning{color:var(--yellow)}
 .log.accent{color:var(--accent)}
 .log.dim{color:var(--muted)}
-.empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
-.footer{text-align:center;margin-top:18px;font-size:11px;color:var(--muted)}
-.footer a{color:var(--accent);text-decoration:none}
-.dots{display:flex;gap:4px;align-items:center}
-.dot-a{width:4px;height:4px;border-radius:50%;background:var(--accent);animation:pulse 1.2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.empty{padding:32px;text-align:center;color:var(--muted);font-size:13px}
+.footer{text-align:center;margin-top:20px;font-size:11px;color:var(--muted)}
+.footer a{color:var(--accent);text-decoration:none;transition:color .15s}
+.footer a:hover{color:var(--accent2)}
+.dots{display:flex;gap:5px;align-items:center}
+.dot-a{
+  width:4px;height:4px;border-radius:50%;
+  background:rgba(255,255,255,.9);
+  animation:pulse 1.2s ease-in-out infinite;
+}
+.dot-a:nth-child(2){animation-delay:.2s}
+.dot-a:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>Download Audio</h1>
-  <p class="sub">Paste a YouTube link &mdash; get the best quality MP3</p>
-
-  <div class="lbl">YouTube URL</div>
-  <div class="input-row">
-    <input type="text" class="url-input" id="url" placeholder="https://www.youtube.com/watch?v=..." autofocus>
-    <button class="btn btn-ghost" onclick="paste()">Paste</button>
+  <div class="header">
+    <h1>Download Audio</h1>
+    <p class="sub">Paste a YouTube link and get the best quality MP3</p>
   </div>
 
-  <div class="lbl">Save Location</div>
-  <div class="save-row">
-    <span class="save-path" id="savePath">~/Downloads</span>
-    <button class="btn-save" onclick="pickFolder()">Change Folder</button>
+  <div class="field">
+    <div class="lbl">YouTube URL</div>
+    <div class="input-row">
+      <input type="text" class="url-input" id="url" placeholder="https://www.youtube.com/watch?v=..." autofocus>
+      <button class="btn btn-ghost" onclick="paste()">Paste</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="lbl">Save Location</div>
+    <div class="save-row">
+      <span class="save-path" id="savePath">~/Downloads</span>
+      <button class="btn-save" onclick="pickFolder()">Change Folder</button>
+    </div>
   </div>
 
   <button class="btn btn-primary" id="dlBtn" onclick="download()">
@@ -82,7 +195,7 @@ h1{font-size:28px;font-weight:800;letter-spacing:-.5px;background:linear-gradien
   </button>
 
   <div class="status">
-    <div class="dot" id="dot"></div>
+    <div class="indicator" id="dot"></div>
     <span class="status-text" id="stxt">Ready to download</span>
   </div>
   <div class="progress"><div class="progress-fill" id="prog"></div></div>
@@ -90,18 +203,29 @@ h1{font-size:28px;font-weight:800;letter-spacing:-.5px;background:linear-gradien
   <div class="lbl">Activity</div>
   <div class="logs" id="logs"><div class="empty">No activity yet</div></div>
 
-  <div class="footer">Built with Go + yt-dlp &middot; <a href="https://github.com/ujanchakraborty/yt-audio-downloader" target="_blank">GitHub</a></div>
+  <div class="footer">
+    Built with Go + yt-dlp · <a href="https://github.com/ujanchakraborty/yt-audio-downloader" target="_blank">GitHub</a>
+  </div>
 </div>
 
 <script>
 let pollTimer=null,lastIdx=0,saveDir='';
 
 async function init(){
-  try{const r=await fetch('/api/info');const d=await r.json();saveDir=d.dir;el('savePath').textContent=d.dir}catch(e){}
+  try{
+    const r=await fetch('/api/info');
+    const d=await r.json();
+    saveDir=d.dir;
+    el('savePath').textContent=d.dir;
+  }catch(e){}
 }
 
 async function paste(){
-  try{const t=await navigator.clipboard.readText();if(t&&t.startsWith('http'))el('url').value=t}catch(e){el('url').focus()}
+  try{
+    const t=await navigator.clipboard.readText();
+    if(t&&(t.includes('youtube.com')||t.includes('youtu.be')))
+      el('url').value=t;
+  }catch(e){el('url').focus()}
 }
 
 async function pickFolder(){
@@ -109,58 +233,108 @@ async function pickFolder(){
     try{
       const h=await window.showDirectoryPicker();
       el('savePath').textContent='Searching: '+h.name+'...';
-      const r=await fetch('/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:h.name})});
+      const r=await fetch('/api/resolve',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:h.name})
+      });
       const d=await r.json();
       if(d.path){saveDir=d.path;el('savePath').textContent=d.path}
       else el('savePath').textContent='Not found: '+h.name;
     }catch(e){}
   }else{
-    const inp=document.createElement('input');inp.type='file';inp.webkitdirectory=true;
+    const inp=document.createElement('input');
+    inp.type='file';inp.webkitdirectory=true;
     inp.onchange=async function(){
       if(!this.files.length)return;
       const name=this.files[0].webkitRelativePath.split('/')[0];
       el('savePath').textContent='Searching: '+name+'...';
-      const r=await fetch('/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+      const r=await fetch('/api/resolve',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name})
+      });
       const d=await r.json();
       if(d.path){saveDir=d.path;el('savePath').textContent=d.path}
       else el('savePath').textContent='Not found: '+name;
-    };inp.click();
+    };
+    inp.click();
   }
 }
 
 async function download(){
   const url=el('url').value.trim();
-  if(!url){el('url').style.borderColor='var(--red)';setTimeout(()=>el('url').style.borderColor='',1500);return}
+  if(!url){
+    const i=el('url');i.style.borderColor='var(--red)';
+    setTimeout(()=>i.style.borderColor='',1200);return;
+  }
   const btn=el('dlBtn');btn.disabled=true;
-  btn.innerHTML='<div class="dots"><div class="dot-a"></div><div class="dot-a" style="animation-delay:.2s"></div><div class="dot-a" style="animation-delay:.4s"></div></div> Downloading...';
-  setStatus('Connecting...','active');el('prog').classList.add('indeterminate');
-  await fetch('/api/logs/clear',{method:'POST'});lastIdx=0;el('logs').innerHTML='';startPoll();
-  try{await fetch('/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,dir:saveDir})})}
-  catch(e){setStatus('Error','error');resetBtn();stopPoll()}
+  btn.innerHTML='<div class="dots"><div class="dot-a"></div><div class="dot-a"></div><div class="dot-a"></div></div> Downloading...';
+  setStatus('Connecting...','active');
+  el('prog').classList.add('indeterminate');
+  await fetch('/api/logs/clear',{method:'POST'});
+  lastIdx=0;el('logs').innerHTML='';
+  startPoll();
+  try{
+    await fetch('/api/download',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url,dir:saveDir})
+    });
+  }catch(e){
+    setStatus('Connection error','error');
+    resetBtn();stopPoll();
+  }
 }
 
 function startPoll(){if(pollTimer)return;pollTimer=setInterval(poll,400)}
 function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null}}
 
 async function poll(){
-  try{const r=await fetch('/api/logs');const data=await r.json();
-  if(data.length===lastIdx)return;const box=el('logs');
-  if(lastIdx===0&&data.length>0)box.innerHTML='';
-  for(let i=lastIdx;i<data.length;i++){
-    const d=document.createElement('div');d.className='log '+(data[i].type||'info');
-    d.innerHTML='<span class="t">'+data[i].time+'</span>'+esc(data[i].text);box.appendChild(d)}
-  box.scrollTop=box.scrollHeight;lastIdx=data.length;
-  const last=data[data.length-1];if(last){
-    if(last.type==='success'&&last.text==='Done!'){setStatus('Complete!','success');el('prog').classList.remove('indeterminate');el('prog').style.width='100%';resetBtn();stopPoll()}
-    else if(last.type==='error'){setStatus('Error','error');el('prog').classList.remove('indeterminate');resetBtn();stopPoll()}
-    else if(last.text.includes('Converting'))setStatus('Converting to MP3...','active');
-  }}catch(e){}
+  try{
+    const r=await fetch('/api/logs');
+    const data=await r.json();
+    if(data.length===lastIdx)return;
+    const box=el('logs');
+    if(lastIdx===0&&data.length>0)box.innerHTML='';
+    for(let i=lastIdx;i<data.length;i++){
+      const d=document.createElement('div');
+      d.className='log '+(data[i].type||'info');
+      d.innerHTML='<span class="t">'+data[i].time+'</span>'+esc(data[i].text);
+      box.appendChild(d);
+    }
+    box.scrollTop=box.scrollHeight;lastIdx=data.length;
+    const last=data[data.length-1];
+    if(last){
+      if(last.type==='success'&&last.text==='Done!'){
+        setStatus('Complete!','success');
+        el('prog').classList.remove('indeterminate');
+        el('prog').style.width='100%';
+        resetBtn();stopPoll();
+      }else if(last.type==='error'){
+        setStatus('Error','error');
+        el('prog').classList.remove('indeterminate');
+        resetBtn();stopPoll();
+      }else if(last.text.includes('Converting')){
+        setStatus('Converting to MP3...','active');
+      }
+    }
+  }catch(e){}
 }
 
-function resetBtn(){const b=el('dlBtn');b.disabled=false;b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Audio'}
-function setStatus(t,s){el('dot').className='dot '+(s||'');el('stxt').textContent=t}
+function resetBtn(){
+  const b=el('dlBtn');b.disabled=false;
+  b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Audio';
+}
+
+function setStatus(t,s){
+  el('dot').className='indicator '+(s||'');
+  el('stxt').textContent=t;
+}
+
 function el(id){return document.getElementById(id)}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
 el('url').addEventListener('keydown',e=>{if(e.key==='Enter')download()});
 init();
 </script>

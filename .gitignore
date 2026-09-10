@@ -1,4 +1,20 @@
+# Binaries
 *.exe
 *.app
-*.tmp
+*.bin
+yt-audio-downloader
+yt-audio-downloader-macos
+
+# Build
 dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
