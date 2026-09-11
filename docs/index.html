@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YT Audio Downloader — High-quality YouTube MP3s</title>
+  <meta name="description" content="Paste a YouTube link. Get the best quality MP3. A small Go app with a dark web UI." />
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #f43f5e;
+      --accent-hover: #fb7185;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .wrap {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(700px 400px at 50% -80px, rgba(244, 63, 94, 0.16), transparent 60%),
+        radial-gradient(500px 300px at 90% 20%, rgba(244, 63, 94, 0.05), transparent 50%);
+    }
+
+    .grid-line {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse at 50% 0%, black 20%, transparent 70%);
+    }
+
+    header, main, footer { position: relative; z-index: 1; }
+
+    header {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(14px);
+      background: rgba(9, 9, 11, 0.72);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #be123c);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.35);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.3), 0 0 24px rgba(244, 63, 94, 0.28);
+      animation: pulse-glow 2.8s ease-in-out infinite;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: #3f3f46;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.28), 0 0 18px rgba(244, 63, 94, 0.22); }
+      50% { box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.5), 0 0 32px rgba(244, 63, 94, 0.4); }
+    }
+
+    .hero {
+      text-align: center;
+      padding: 96px 0 72px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: rgba(24, 24, 27, 0.7);
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 22px;
+    }
+
+    .badge span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      letter-spacing: -0.05em;
+      line-height: 1.02;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .hero p.lead {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .meta {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    section { padding: 72px 0; }
+
+    .section-head {
+      margin-bottom: 32px;
+    }
+
+    .section-head h2 {
+      font-size: 28px;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .section-head p { color: var(--muted); }
+
+    .grid-4, .grid-3, .os-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .os-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+      border-color: #3f3f46;
+    }
+
+    .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.22);
+      display: grid;
+      place-items: center;
+      margin-bottom: 14px;
+      color: var(--accent);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .card p { color: var(--muted); font-size: 14px; }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(244, 63, 94, 0.25);
+    }
+
+    .os-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .os-card a.dl {
+      display: inline-flex;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--accent-hover);
+    }
+
+    .os-card a.dl:hover { text-decoration: underline; }
+
+    pre {
+      background: #0c0c0e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: #e4e4e7;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      line-height: 1.7;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0 40px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .grid-4, .grid-3, .os-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links a:not(.btn) { display: none; }
+      .hero { padding: 72px 0 56px; }
+    }
+
+    @media (max-width: 600px) {
+      .grid-4, .grid-3, .os-grid { grid-template-columns: 1fr; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="grid-line"></div>
+
+  <header>
+    <nav class="wrap">
+      <a class="brand" href="#">
+        <span class="logo" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M8 6v12l10-6L8 6z" fill="white"/>
+          </svg>
+        </span>
+        YT Audio Downloader
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#install">Install</a>
+        <a class="btn btn-ghost" href="https://github.com/ujanchakraborty/yt-audio-downloader" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="badge"><span></span> Open source · Built with Go</div>
+      <h1>YT Audio Downloader</h1>
+      <p class="lead">Paste a YouTube link. Get the best quality MP3.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>
+          </svg>
+          Download latest
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/ujanchakraborty/yt-audio-downloader" target="_blank" rel="noopener">View source</a>
+      </div>
+      <div class="meta">
+        <span>Dark web UI</span>
+        <span>·</span>
+        <span>Windows, Linux &amp; macOS</span>
+        <span>·</span>
+        <span>MIT License</span>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Everything you need. Nothing extra.</h2>
+          <p>A small local app that turns a YouTube URL into a clean MP3.</p>
+        </div>
+        <div class="grid-4">
+          <article class="card reveal">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </div>
+            <h3>One-click download</h3>
+            <p>Paste a link and hit download. No CLI flags to remember.</p>
+          </article>
+          <article class="card reveal">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <h3>Best quality audio</h3>
+            <p>Extracts the highest available audio and converts it to MP3.</p>
+          </article>
+          <article class="card reveal">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+              </svg>
+            </div>
+            <h3>Folder picker</h3>
+            <p>Choose exactly where files land before the download starts.</p>
+          </article>
+          <article class="card reveal">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 7v5l3 2"/>
+              </svg>
+            </div>
+            <h3>Real-time progress</h3>
+            <p>Watch status update live in the dark web UI as files save.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>How it works</h2>
+          <p>Three steps. Then the MP3 is on disk.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card reveal">
+            <div class="step-num">1</div>
+            <h3>Paste URL</h3>
+            <p>Drop any YouTube video link into the web UI.</p>
+          </article>
+          <article class="card reveal">
+            <div class="step-num">2</div>
+            <h3>Pick folder</h3>
+            <p>Select the destination folder on your machine.</p>
+          </article>
+          <article class="card reveal">
+            <div class="step-num">3</div>
+            <h3>Download</h3>
+            <p>Start the job and wait for a high-quality MP3.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Install</h2>
+          <p>Grab the binary for your OS, then install yt-dlp and ffmpeg.</p>
+        </div>
+        <div class="os-grid">
+          <article class="card os-card reveal">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v6.7H3V5.5zm8.2-.2L21 3.8v7.3h-9.8V5.3zM3 13.1h7.5V20L3 18.8v-5.7zm8.2.1H21V20.4l-9.8-1.4v-5.8z"/></svg>
+              Windows
+            </h3>
+            <a class="dl" href="https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest" target="_blank" rel="noopener">Download YT Audio Downloader.exe →</a>
+            <pre>pip install yt-dlp
+winget install ffmpeg</pre>
+            <p class="note">Then double-click the .exe to open the web UI.</p>
+          </article>
+
+          <article class="card os-card reveal">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2c-.8 1.1-1.3 2.5-1.2 3.9 1.3.1 2.6-.6 3.4-1.6.8-1 1.3-2.4 1.2-3.8-1.3 0-2.6.5-3.4 1.5zM8.2 7.4C6.4 7.4 3 8.6 3 13.1c0 3.6 2.8 7.9 5.3 7.9 1.1 0 1.8-.7 3.3-.7s2 .7 3.3.7c2.4 0 4.3-3.4 5.2-5.2-3.3-1.4-3.8-6.4-.7-8.1-1.1-1.3-2.7-2-4.3-2.1-1.5 0-2.7.8-3.5.8-.9 0-2.2-.8-3.4-.8z"/></svg>
+              Linux
+            </h3>
+            <a class="dl" href="https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest" target="_blank" rel="noopener">Download yt-audio-downloader →</a>
+            <pre>pip install yt-dlp
+sudo apt install ffmpeg
+chmod +x yt-audio-downloader
+./yt-audio-downloader</pre>
+            <p class="note">Use your distro's package manager if you are not on Debian/Ubuntu.</p>
+          </article>
+
+          <article class="card os-card reveal">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.7 12.6c0-3.2 2.6-4.7 2.7-4.8-1.5-2.2-3.8-2.5-4.6-2.5-1.9-.2-3.8 1.2-4.8 1.2-1 0-2.6-1.1-4.2-1.1-2.2 0-4.2 1.3-5.3 3.3-2.3 4-0.6 9.9 1.6 13.1 1.1 1.6 2.4 3.4 4.1 3.3 1.6-.1 2.3-1.1 4.3-1.1s2.6 1.1 4.3 1c1.8 0 2.9-1.6 4-3.2 1.2-1.8 1.7-3.5 1.7-3.6-.1 0-3.3-1.3-3.3-5.1zM14.5 3.9c.9-1.1 1.5-2.6 1.3-4.1-1.3.1-2.8.9-3.7 2-.8.9-1.6 2.5-1.4 3.9 1.5.1 2.9-.7 3.8-1.8z"/></svg>
+              macOS
+            </h3>
+            <a class="dl" href="https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest" target="_blank" rel="noopener">Download yt-audio-downloader-mac →</a>
+            <pre>pip install yt-dlp
+brew install ffmpeg
+chmod +x yt-audio-downloader-mac
+./yt-audio-downloader-mac</pre>
+            <p class="note">Allow the binary in System Settings if Gatekeeper blocks the first run.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>YT Audio Downloader</span>
+      <div>
+        <a href="https://github.com/ujanchakraborty/yt-audio-downloader" target="_blank" rel="noopener">GitHub</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/ujanchakraborty/yt-audio-downloader/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  </script>
+</body>
+</html>
