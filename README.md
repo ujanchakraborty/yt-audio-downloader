@@ -12,12 +12,20 @@ Download YouTube audio as high-quality MP3.
 ### Linux
 1. Download `yt-audio-downloader` from [Releases](https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest)
 2. Install yt-dlp and ffmpeg (see below)
-3. `chmod +x yt-audio-downloader && ./yt-audio-downloader`
+3. Run:
+   ```
+   chmod +x yt-audio-downloader
+   ./yt-audio-downloader
+   ```
 
 ### macOS
 1. Download `yt-audio-downloader-mac` from [Releases](https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest)
 2. Install yt-dlp and ffmpeg (see below)
-3. `chmod +x yt-audio-downloader-mac && ./yt-audio-downloader-mac`
+3. Run:
+   ```
+   chmod +x yt-audio-downloader-mac
+   ./yt-audio-downloader-mac
+   ```
 
 ## Installing Dependencies
 
