@@ -46,7 +46,7 @@ winget install ffmpeg
 **Linux:**
 ```
 pip install yt-dlp
-sudo apt install ffmpeg
+sudo apt update && sudo apt install -y ffmpeg
 ```
 
 **macOS:**
