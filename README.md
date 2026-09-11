@@ -10,14 +10,14 @@ Download YouTube audio as high-quality MP3.
 3. Double-click the .exe to run
 
 ### Linux
-1. Download `yt-audio-downloader` from [Releases](https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest)
-2. Install yt-dlp and ffmpeg (see below)
+1. Download `yt-audio-downloader` and `run.sh` from [Releases](https://github.com/ujanchakraborty/yt-audio-downloader/releases/latest)
+2. Install dependencies (see below)
 3. Open terminal in the download folder and run:
    ```bash
-   chmod +x yt-audio-downloader
+   chmod +x run.sh
    ```
    ```bash
-   ./yt-audio-downloader
+   ./run.sh
    ```
    > **Note:** Linux binaries run from the terminal, not by double-clicking.
 
